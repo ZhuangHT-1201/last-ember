@@ -1,0 +1,21 @@
+{
+  "name": "last-ember",
+  "private": true,
+  "version": "1.1.0",
+  "description": "LAST EMBER — a browser-based first-person zombie survival shooter.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "screenshots": "node scripts/capture-screenshots.mjs",
+    "test:smoke": "node scripts/smoke-test.mjs"
+  },
+  "dependencies": {
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1",
+    "vite": "^7.1.0"
+  }
+}

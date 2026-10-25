@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#090b0a" />
+    <meta name="description" content="LAST EMBER（余烬协议）— 一款第一人称丧尸生存射击游戏" />
+    <title>LAST EMBER // 余烬协议</title>
+  </head>
+  <body>
+    <div id="game-shell">
+      <canvas id="game-canvas" aria-label="LAST EMBER 游戏画面"></canvas>
+
+      <div id="cinematic-bars" aria-hidden="true">
+        <i></i><i></i>
+      </div>
+      <div id="grain" aria-hidden="true"></div>
+      <div id="damage-vignette" aria-hidden="true"></div>
+      <div id="heal-flash" aria-hidden="true"></div>
+      <div id="interference" aria-hidden="true"></div>
+
+      <main id="hud" class="hidden" aria-label="游戏状态">
+        <header class="hud-top">
+          <div class="location-block">
+            <span class="eyebrow">GREYHARBOR / SECTOR 03</span>
+            <strong>灰港 · 隔离区</strong>
+            <div class="compass" aria-hidden="true">
+              <span>W</span><span>NW</span><b id="compass-heading">N</b><span>NE</span><span>E</span>
+            </div>
+          </div>
+
+          <div class="wave-block">
+            <div class="wave-line"><span id="wave-label">WAVE 01</span><i></i><span id="enemy-counter">0 威胁</span></div>
+            <div class="wave-title" id="wave-title">第一波 · 苏醒</div>
+            <div class="wave-progress"><i id="wave-progress-fill"></i></div>
+            <span class="wave-hint" id="wave-hint">搜寻补给，准备迎战</span>
+          </div>
+
+          <div class="mission-block">
+            <span class="eyebrow">SURVIVAL DIRECTIVE</span>
+            <div class="mission-row"><i></i><span id="mission-text">坚守至第 08 波撤离</span></div>
+            <span id="mission-subtext">保持无线电在线</span>
+          </div>
+        </header>
+
+        <section class="crosshair" id="crosshair" aria-hidden="true">
+          <i class="crosshair-top"></i>
+          <i class="crosshair-right"></i>
+          <i class="crosshair-bottom"></i>
+          <i class="crosshair-left"></i>
+          <b></b>
+        </section>
+        <div id="hitmarker" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div id="damage-indicator" aria-hidden="true"></div>
+
+        <aside class="minimap-shell" aria-label="战术雷达">
+          <div class="minimap-header">
+            <span>战术雷达</span><b>LIVE</b>
+          </div>
+          <canvas id="minimap" width="220" height="220"></canvas>
+          <div class="minimap-footer"><span>N</span><i></i><span id="compass-coords">00 / 00</span></div>
+        </aside>
+
+        <section class="kill-feed" id="kill-feed" aria-live="polite"></section>
+        <section class="notification-stack" id="notifications" aria-live="polite"></section>
+
+        <div class="interaction-prompt hidden" id="interaction-prompt">
+          <kbd>E</kbd>
+          <div><span id="interaction-action">拾取</span><strong id="interaction-name">医疗绷带</strong></div>
+        </div>
+
+        <footer class="hud-bottom">
+          <div class="vitals">
+            <div class="vital-row">
+              <span class="vital-icon health-icon">+</span>
+              <div class="vital-copy"><span>生命体征</span><b id="health-value">100</b></div>
+              <div class="vital-track health-track"><i id="health-fill"></i></div>
+            </div>
+            <div class="vital-row">
+              <span class="vital-icon stamina-icon">◒</span>
+              <div class="vital-copy"><span>体力</span><b id="stamina-value">100</b></div>
+              <div class="vital-track stamina-track"><i id="stamina-fill"></i></div>
+            </div>
+            <div class="status-pills">
+              <span class="status-pill active" id="flashlight-status"><i></i>灯</span>
+              <span class="status-pill" id="bleed-status"><i></i>出血</span>
+            </div>
+          </div>
+
+          <div class="weapon-panel">
+            <div class="weapon-meta">
+              <span id="weapon-class">PRIMARY / AUTO</span>
+              <strong id="weapon-name">M4A1 · 灰烬</strong>
+            </div>
+            <div class="ammo-readout">
+              <span id="ammo-mag">30</span><i>/</i><span id="ammo-reserve">090</span>
+            </div>
+            <div class="ammo-ticks" id="ammo-ticks"></div>
+            <div class="weapon-slots">
+              <span class="weapon-slot active" data-slot="1"><kbd>1</kbd><i></i><b>步枪</b></span>
+              <span class="weapon-slot" data-slot="2"><kbd>2</kbd><i></i><b>霰弹</b></span>
+            </div>
+          </div>
+
+          <div class="quick-panel">
+            <div class="inventory-mini">
+              <button class="quick-item" id="quick-med" title="使用医疗包 [H]"><span class="item-icon med">+</span><b id="med-count">2</b></button>
+              <button class="quick-item" id="quick-grenade" title="投掷燃烧瓶 [G]"><span class="item-icon grenade">◈</span><b id="grenade-count">1</b></button>
+              <button class="quick-item" id="quick-food" title="食用口粮 [F]"><span class="item-icon food">▥</span><b id="food-count">1</b></button>
+            </div>
+            <button class="backpack-shortcut" id="backpack-shortcut"><kbd>TAB</kbd><span>战术背包</span></button>
+          </div>
+        </footer>
+
+        <div id="objective-banner" class="objective-banner hidden">
+          <span id="objective-kicker">NEW OBJECTIVE</span>
+          <strong id="objective-title">补给空投已进入区域</strong>
+          <p id="objective-desc">橙色信标附近的物资可补充战斗消耗</p>
+        </div>
+        <div id="interwave-timer" class="interwave-timer hidden">
+          <span>下一波攻势</span><b id="interwave-value">00:20</b>
+        </div>
+
+        <div id="boss-panel" class="boss-panel hidden">
+          <div><span>高危变异体</span><strong id="boss-name">裂口者</strong></div>
+          <div class="boss-health"><i id="boss-health-fill"></i></div>
+        </div>
+      </main>
+
+      <section id="start-screen" class="screen start-screen">
+        <div class="start-noise" aria-hidden="true"></div>
+        <div class="start-left">
+          <div class="brand-lockup">
+            <span class="brand-mark"><i></i><i></i><i></i></span>
+            <div><span>LAST EMBER</span><b>黑潮应急响应部</b></div>
+          </div>
+          <div class="title-copy">
+            <span class="chapter">SURVIVAL RECORD // 08</span>
+            <h1>余烬<br /><em>协议</em></h1>
+            <p>感染爆发后的第 47 天。灰港已失去联络。<br />你是最后一条仍在广播的求救信号。</p>
+          </div>
+          <button id="start-button" class="primary-button">
+            <span class="button-index">01</span>
+            <span><b>进入隔离区</b><small>ENTER THE QUARANTINE</small></span>
+            <i>→</i>
+          </button>
+          <div class="start-actions">
+            <button id="howto-button" class="text-button">作战手册</button>
+            <button id="audio-button" class="text-button">声音：开启</button>
+          </div>
+        </div>
+
+        <div class="start-right">
+          <div class="signal-card">
+            <span>EMERGENCY CHANNEL 09</span>
+            <div class="signal-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <b>信号稳定</b>
+          </div>
+          <div class="mission-card">
+            <div class="mission-card-head"><span>本次行动</span><b>MISSION 03</b></div>
+            <h2>灰港封锁线</h2>
+            <p>搜集物资，建立防线，在八轮尸潮中活下来。救援直升机将在最终信号发出后抵达。</p>
+            <div class="mission-stats">
+              <div><b>08</b><span>尸潮轮次</span></div>
+              <div><b>1.4 km</b><span>封锁半径</span></div>
+              <div><b class="danger">极高</b><span>威胁等级</span></div>
+            </div>
+          </div>
+          <div class="start-tip"><span>TIP</span><p>按 <kbd>Tab</kbd> 打开背包。废料、布料与化学品可组合成关键补给。</p></div>
+        </div>
+      </section>
+
+      <section id="pause-screen" class="screen modal-screen hidden">
+        <div class="screen-card pause-card">
+          <span class="eyebrow">TACTICAL HOLD</span>
+          <h2>行动暂停</h2>
+          <p>隔离区的时间已经冻结。准备好后继续行动。</p>
+          <button id="resume-button" class="primary-button compact"><span><b>继续行动</b><small>RESUME OPERATION</small></span><i>→</i></button>
+          <div class="modal-actions">
+            <button id="pause-howto-button" class="text-button">作战手册</button>
+            <button id="restart-button" class="text-button danger-text">重启任务</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="inventory-screen" class="screen inventory-screen hidden">
+        <div class="inventory-window">
+          <header class="inventory-header">
+            <div><span class="eyebrow">FIELD INVENTORY // ACTIVE</span><h2>战术背包</h2></div>
+            <div class="carry-state"><span>负重</span><b id="carry-weight">00.0 / 30.0 kg</b><i><em id="carry-fill"></em></i></div>
+            <button id="inventory-close" class="icon-button" aria-label="关闭背包">×</button>
+          </header>
+
+          <div class="inventory-body">
+            <section class="inventory-grid-section">
+              <div class="section-head"><span>物资储备</span><b id="inventory-used">0 / 12</b></div>
+              <div class="inventory-grid" id="inventory-grid"></div>
+              <div class="inventory-detail" id="inventory-detail">
+                <span class="detail-icon">◇</span>
+                <div><h3>选择一个物资</h3><p>查看物品信息，并使用可消耗的补给。</p></div>
+              </div>
+            </section>
+
+            <section class="crafting-section">
+              <div class="section-head"><span>现场制作</span><b>FIELD CRAFT</b></div>
+              <div class="recipe-list" id="recipe-list"></div>
+              <div class="craft-tip"><span>CRAFT TIP</span><p>物资会在每一轮尸潮后补充。橙色空投箱包含更高价值的零件。</p></div>
+            </section>
+          </div>
+
+          <footer class="inventory-footer">
+            <span><kbd>TAB</kbd> 返回战斗</span>
+            <span><kbd>H</kbd> 使用医疗包</span>
+            <span><kbd>G</kbd> 投掷燃烧瓶</span>
+            <span><kbd>F</kbd> 食用口粮</span>
+          </footer>
+        </div>
+      </section>
+
+      <section id="howto-screen" class="screen modal-screen hidden">
+        <div class="screen-card howto-card">
+          <div class="howto-title-row">
+            <div><span class="eyebrow">FIELD MANUAL // 09</span><h2>生存作战手册</h2></div>
+            <button id="howto-close" class="icon-button" aria-label="关闭作战手册">×</button>
+          </div>
+          <div class="howto-grid">
+            <div><kbd>W A S D</kbd><b>移动</b><span>穿越封锁区，留意阴影中的感染者</span></div>
+            <div><kbd>鼠标</kbd><b>观察 / 射击</b><span>左键射击，右键瞄准，爆头伤害更高</span></div>
+            <div><kbd>SHIFT</kbd><b>冲刺</b><span>快速拉开距离，消耗体力</span></div>
+            <div><kbd>R</kbd><b>换弹</b><span>弹匣打空前换弹速度会变慢</span></div>
+            <div><kbd>E</kbd><b>搜寻物资</b><span>靠近发光的补给按 E 收集</span></div>
+            <div><kbd>TAB</kbd><b>战术背包</b><span>查看物资，制作弹药与燃烧瓶</span></div>
+            <div><kbd>Q</kbd><b>战术灯</b><span>照亮黑暗，但会吸引附近感染者</span></div>
+            <div><kbd>H / F / G</kbd><b>应急物资</b><span>医疗、口粮、燃烧瓶</span></div>
+          </div>
+          <div class="howto-note"><i></i><p>濒死时请立即拉开距离。普通感染者会成群包抄，奔跑者速度极快，重装变异体需要集中火力。</p></div>
+        </div>
+      </section>
+
+      <section id="gameover-screen" class="screen modal-screen end-screen hidden">
+        <div class="end-backdrop" id="end-backdrop"></div>
+        <div class="screen-card end-card">
+          <span class="eyebrow" id="end-kicker">SIGNAL LOST // 00:00</span>
+          <h2 id="end-title">行动失败</h2>
+          <p id="end-description">你的信号从灰港雷达上消失了。隔离区仍在扩散。</p>
+          <div class="end-stats">
+            <div><b id="end-wave">01</b><span>抵达波次</span></div>
+            <div><b id="end-kills">0</b><span>清除威胁</span></div>
+            <div><b id="end-time">00:00</b><span>存活时间</span></div>
+            <div><b id="end-accuracy">0%</b><span>命中精度</span></div>
+          </div>
+          <button id="retry-button" class="primary-button compact"><span><b>重新部署</b><small>REDEPLOY OPERATOR</small></span><i>↻</i></button>
+        </div>
+      </section>
+
+      <div id="wave-banner" class="wave-banner hidden">
+        <span id="wave-banner-kicker">INCOMING HOSTILES</span>
+        <strong id="wave-banner-title">第一波 · 苏醒</strong>
+        <p id="wave-banner-subtitle">感染体正在接近封锁区</p>
+      </div>
+
+      <div id="toast" class="toast hidden"><i></i><span id="toast-text">已拾取物资</span></div>
+      <div id="screen-fade"></div>
+
+      <div id="touch-controls" class="touch-controls hidden" aria-hidden="true">
+        <div id="touch-stick" class="touch-stick"><i></i></div>
+        <div id="touch-look" class="touch-look"></div>
+        <button id="touch-fire" class="touch-action fire">FIRE</button>
+        <button id="touch-aim" class="touch-action">AIM</button>
+        <button id="touch-reload" class="touch-action">R</button>
+        <button id="touch-use" class="touch-action">E</button>
+        <button id="touch-backpack" class="touch-action utility backpack">背包</button>
+        <button id="touch-med" class="touch-action utility">医疗</button>
+        <button id="touch-grenade" class="touch-action utility">燃烧</button>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
